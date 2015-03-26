@@ -23,24 +23,31 @@
 #
 import re
 try:
-	from cli import cli
+    from cli import cli
 except ImportError:
-	from cisco import cli
+    from cisco import cli
 from argparse import ArgumentParser
 
-def expandrange(rangefunc):
-    hosts = []
-    octets = rangefunc.split('.')
-    for i,octet in enumerate(octets):
-        if '-' in octet:
-            octetrange = octet.split('-')
-            for digit in range(int(octetrange[0]), int(octetrange[1])+1):
-                ip = '.'.join(octets[:i] + [str(digit)] + octets[i+1:])
-                hosts += expandrange(ip)
-            break
-    else:
-        hosts.append(rangefunc)
-    return hosts
+
+
+
+def get_range(octet):
+    if(octet.find("-") == -1):
+
+        return range(int(octet),int(octet)+1)
+
+    ints = octet.split("-")
+    return range(int(ints[0]), int(ints[1])+1)
+
+def expandrange(ip_addr):
+
+    ip_addr = ip_addr.split(".")
+    for octet1 in get_range(ip_addr[0]):
+        for octet2 in get_range(ip_addr[1]):
+            for octet3 in get_range(ip_addr[2]):
+                for octet4 in get_range(ip_addr[3]):
+                    yield str(octet1) + "." + str(octet2) + "." + str(octet3) + "." + str(octet4)
+
 
 parser = ArgumentParser('pingrange')
 parser.add_argument('ip', help='IP range to ping, e.g., 10.1.0-1.0-255 will expand to 10.1.0.0/23')
